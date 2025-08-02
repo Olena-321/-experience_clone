@@ -3,7 +3,7 @@
 function pow(x,y) {
     let result = x 
 for (let i=1; i<y; i++) {
-result = result * x /* Tекущее значение переменной result и умножь на x,
+result = result * x /* Tекущее значение переменной result умножить на x,
 затем положить обратно это новое значение в result*/
 }
 return result
