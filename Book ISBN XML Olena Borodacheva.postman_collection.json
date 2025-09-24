@@ -1,0 +1,343 @@
+{
+	"info": {
+		"_postman_id": "6ed9be57-c93f-41fa-9216-fdb4c8e6b156",
+		"name": "Book ISBN XML Olena Borodacheva",
+		"description": "SOAP запити для перевірки ISBN10 та ISBN13",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "31129478",
+		"_collection_link": "https://tyy000.postman.co/workspace/QA-Technical-Pro~108d72bd-f50e-4ffc-bb7e-24b2bb026920/collection/31129478-6ed9be57-c93f-41fa-9216-fdb4c8e6b156?action=share&source=collection_link&creator=31129478"
+	},
+	"item": [
+		{
+			"name": "IsValidISBN13",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const body = pm.response.text();",
+							"",
+							"//  Check response status code",
+							"pm.test(\"Response status is 200\", () => {",
+							"    pm.expect(pm.response.code).to.eql(200);",
+							"});",
+							"",
+							"//  Check that response type is XML",
+							"pm.test(\"Response Content-Type is XML\", () => {",
+							"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"xml\");",
+							"});",
+							"",
+							"//  Response body is not empty",
+							"pm.test(\"Response body is not empty\", () => {",
+							"    pm.expect(body).to.not.be.empty;",
+							"});",
+							"",
+							"//  SOAP Body is not empty",
+							"pm.test(\"SOAP Body is not empty\", () => {",
+							"    pm.expect(body).to.match(/<soap:Body>[\\s\\S]+<\\/soap:Body>/);",
+							"});",
+							"",
+							"//  XML version is correct",
+							"pm.test(\"XML version is 1.0\", () => {",
+							"    pm.expect(body).to.include('<?xml version=\"1.0\" encoding=\"utf-8\"?>');",
+							"});",
+							"",
+							"",
+							"",
+							"//  Check result tag and boolean value",
+							"pm.test(\"Result tag is boolean\", () => {",
+							"    pm.expect(body).to.match(/<m:IsValidISBN13Result>(true|false)<\\/m:IsValidISBN13Result>/);",
+							"});",
+							"",
+							"//  Check expected tags in SOAP response",
+							"pm.test(\"All key XML tags are present\", () => {",
+							"    const expectedTags = [",
+							"        \"soap:Envelope\",",
+							"        \"soap:Body\",",
+							"        \"m:IsValidISBN13Response\",",
+							"        \"m:IsValidISBN13Result\"",
+							"    ];",
+							"    expectedTags.forEach(tag => pm.expect(body).to.include(tag));",
+							"});",
+							"",
+							"",
+							"",
+							"pm.test(\"Check ISBN13 result based on request ISBN\", () => {",
+							"    // Берём ISBN из переменной запроса",
+							"    const isbn = pm.variables.get(\"isbn\"); ",
+							"",
+							"    const body = pm.response.text();",
+							"    const resultMatch = body.match(/<m:IsValidISBN13Result>(true|false)<\\/m:IsValidISBN13Result>/);",
+							"    const result = resultMatch ? resultMatch[1] : null;",
+							"",
+							"    if (isbn === \"978-1-4612-9090-2\") {",
+							"        pm.expect(result).to.eql(\"true\");",
+							"    } else {",
+							"        pm.expect(result).to.eql(\"false\");",
+							"    }",
+							"});",
+							"",
+							"pm.test(\"SOAP Envelope is present with correct namespace\", () => {",
+							"   pm.expect(body).to.include('<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">');",
+							"});",
+							"",
+							"pm.test(\"All XML tags are closed\", () => {",
+							"   // Считаем открывающие теги (не включая <?xml ... ?> )",
+							"    const openTags = (body.match(/<[^\\/!?][^>]*>/g) || []).length;",
+							"",
+							"    // Считаем закрывающие теги",
+							"    const closeTags = (body.match(/<\\/[^>]+>/g) || []).length;",
+							"",
+							"    pm.expect(openTags, \"Number of opening and closing tags mismatch\").to.eql(closeTags);",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.variables.set(\"isbn\", \"978-1-4612-9090-2\"); ",
+							"//pm.variables.set(\"isbn\", \"978-1-4612-9090-1\");",
+							"//pm.variables.set(\"isbn\", \"\");"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "text/xml; charset=utf-8"
+					},
+					{
+						"key": "SOAPAction",
+						"value": "http://webservices.daehosting.com/ISBN/IsValidISBN13"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <IsValidISBN13 xmlns=\"http://webservices.daehosting.com/ISBN\">\n      <sISBN>978-1-4612-9090-2</sISBN>\n    </IsValidISBN13>\n  </soap:Body>\n</soap:Envelope>"
+				},
+				"url": {
+					"raw": "http://webservices.daehosting.com/services/isbnservice.wso",
+					"protocol": "http",
+					"host": [
+						"webservices",
+						"daehosting",
+						"com"
+					],
+					"path": [
+						"services",
+						"isbnservice.wso"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "IsValidISBN10",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const body = pm.response.text();",
+							"",
+							"//  Check response status code",
+							"pm.test(\"Response status is 200\", () => {",
+							"    pm.expect(pm.response.code).to.eql(200);",
+							"});",
+							"",
+							"//  Check that response type is XML",
+							"pm.test(\"Response Content-Type is XML\", () => {",
+							"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"xml\");",
+							"});",
+							"",
+							"//  Response body is not empty",
+							"pm.test(\"Response body is not empty\", () => {",
+							"    pm.expect(body).to.not.be.empty;",
+							"});",
+							"",
+							"",
+							"",
+							"// Check that <m:IsValidISBN10Result> is boolean",
+							"pm.test(\"Result tag is boolean\", () => {",
+							"    pm.expect(body).to.match(/<m:IsValidISBN10Result>(true|false)<\\/m:IsValidISBN10Result>/);",
+							"});",
+							"",
+							"// SOAP Envelope is present with correct namespace",
+							"pm.test(\"SOAP Envelope is present with correct namespace\", () => {",
+							"    pm.expect(body).to.include('<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">');",
+							"});",
+							"",
+							"//  SOAP Body is not empty",
+							"pm.test(\"SOAP Body is not empty\", () => {",
+							"    pm.expect(body).to.match(/<soap:Body>[\\s\\S]+<\\/soap:Body>/);",
+							"});",
+							"",
+							"//  XML version is correct",
+							"pm.test(\"XML version is 1.0\", () => {",
+							"    pm.expect(body).to.include('<?xml version=\"1.0\" encoding=\"utf-8\"?>');",
+							"});",
+							"",
+							"//  All key XML tags are present",
+							"pm.test(\"All key XML tags are present\", () => {",
+							"    const expectedTags = [",
+							"        \"soap:Envelope\",",
+							"        \"soap:Body\",",
+							"        \"IsValidISBN10\",",
+							"        \"m:IsValidISBN10Result\"",
+							"    ];",
+							"    expectedTags.forEach(tag => pm.expect(body).to.include(tag));",
+							"});",
+							"",
+							"//   Check that result is true for a known valid ISBN",
+							"pm.test(\"ISBN10 result based on request ISBN\", () => {",
+							"    const isbn = pm.variables.get(\"isbn\");",
+							"    const resultMatch = body.match(/<m:IsValidISBN10Result>(true|false)<\\/m:IsValidISBN10Result>/);",
+							"    const result = resultMatch ? resultMatch[1] : null;",
+							"",
+							"    if (isbn === \"0-19-852663-6\") { ",
+							"        pm.expect(result).to.eql(\"true\");",
+							"    } else {",
+							"        pm.expect(result).to.eql(\"false\");",
+							"    }",
+							"});",
+							"",
+							"pm.test(\"All XML tags are closed\", () => {",
+							"   // Считаем открывающие теги (не включая <?xml ... ?> )",
+							"    const openTags = (body.match(/<[^\\/!?][^>]*>/g) || []).length;",
+							"",
+							"    // Считаем закрывающие теги",
+							"    const closeTags = (body.match(/<\\/[^>]+>/g) || []).length;",
+							"",
+							"    pm.expect(openTags, \"Number of opening and closing tags mismatch\").to.eql(closeTags);",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.variables.set(\"isbn\", \"0-19-852663-6\"); ",
+							"//pm.variables.set(\"isbn\", \"978-1-4612-9090-1\");",
+							"//pm.variables.set(\"isbn\", \"\");"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "text/xml; charset=utf-8"
+					},
+					{
+						"key": "SOAPAction",
+						"value": "http://webservices.daehosting.com/ISBN/IsValidISBN10"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <IsValidISBN10 xmlns=\"http://webservices.daehosting.com/ISBN\">\n      <sISBN>0-19-852663-6</sISBN>\n    </IsValidISBN10>\n  </soap:Body>\n</soap:Envelope>"
+				},
+				"url": {
+					"raw": "http://webservices.daehosting.com/services/isbnservice.wso",
+					"protocol": "http",
+					"host": [
+						"webservices",
+						"daehosting",
+						"com"
+					],
+					"path": [
+						"services",
+						"isbnservice.wso"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "bookInformation",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// 1. Check that response contains both available operations",
+							"pm.test(\"Response contains IsValidISBN13 and IsValidISBN10\", function () {",
+							"    pm.expect(pm.response.text()).to.include(\"IsValidISBN13\");",
+							"    pm.expect(pm.response.text()).to.include(\"IsValidISBN10\");",
+							"});",
+							"",
+							"// 2. Check that main HTML tags are properly closed",
+							"pm.test(\"Response contains properly closed HTML tags\", function () {",
+							"    const body = pm.response.text();",
+							"    pm.expect(body).to.include(\"</html>\");",
+							"    pm.expect(body).to.include(\"</head>\");",
+							"    pm.expect(body).to.include(\"</body>\");",
+							"    pm.expect(body).to.include(\"</ul>\");",
+							"    pm.expect(body).to.include(\"</li>\");",
+							"    pm.expect(body).to.include(\"</a>\");",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "text/xml; charset=utf-8",
+						"type": "text"
+					},
+					{
+						"key": "SOAPAction",
+						"value": "http://webservices.daehosting.com/ISBN/GetBookInformation",
+						"type": "text"
+					},
+					{
+						"key": "",
+						"value": "",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"url": {
+					"raw": "http://webservices.daehosting.com/services/isbnservice.wso",
+					"protocol": "http",
+					"host": [
+						"webservices",
+						"daehosting",
+						"com"
+					],
+					"path": [
+						"services",
+						"isbnservice.wso"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
